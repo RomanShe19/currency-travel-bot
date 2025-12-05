@@ -786,7 +786,11 @@ def handle_currency_to(message):
         result = convert_currency(1, trip_data['currency_from'], trip_data['currency_to'])
         
         if result.get('success'):
-            rate = result.get('result', result.get('info', {}).get('rate'))
+            # API возвращает курс в info.quote, а результат конвертации в result
+            rate = result.get('info', {}).get('quote')
+            if not rate:
+                # Fallback: используем result если это была конвертация 1 единицы
+                rate = result.get('result')
             if rate:
                 trip_data['api_rate'] = rate
                 
@@ -798,7 +802,7 @@ def handle_currency_to(message):
                 
                 bot.send_message(
                     message.chat.id,
-                    f"✅ Страна назначения: {country} ({currency})\n\n"
+                    f"✅ Валюта назначения: {country_name or currency} ({currency})\n\n"
                     f"💱 Текущий курс обмена:\n"
                     f"1 {trip_data['currency_from']} = {rate:.4f} {currency}\n\n"
                     f"Шаг 3/5: Использовать этот курс?",
@@ -807,14 +811,18 @@ def handle_currency_to(message):
                 return
         
         # Если API не вернул успешный результат
-        raise Exception("Не удалось получить курс")
+        error_msg = result.get('error', {}).get('info', 'Неизвестная ошибка')
+        print(f"❌ API Error: {error_msg}")
+        print(f"Full response: {result}")
+        raise Exception(f"API Error: {error_msg}")
         
     except Exception as e:
+        print(f"❌ Exception in currency conversion: {e}")
         bot.send_message(
             message.chat.id,
             f"⚠️ Не удалось получить курс от API.\n\n"
             f"Шаг 3/5: Пожалуйста, введите курс обмена вручную.\n"
-            f"Формат: 1 {trip_data['currency_from']} = ? {currency}"
+            f"Формат: 1 {trip_data['currency_from']} = ? {trip_data['currency_to']}"
         )
         user_states[user_id]['state'] = 'waiting_manual_rate'
 
