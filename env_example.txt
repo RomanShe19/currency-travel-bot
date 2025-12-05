@@ -1,0 +1,8 @@
+# Telegram Bot Token
+# Получите токен у @BotFather в Telegram
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+
+# Currency API Access Key
+# Зарегистрируйтесь на https://exchangerate.host/ и получите API ключ
+CURRENCY_ACCESS_KEY=your_currency_api_access_key_here
+
